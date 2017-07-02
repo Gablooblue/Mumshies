@@ -4,6 +4,7 @@
     <title>Mumshies</title>
     <link rel="stylesheet" type="text/css" href="unsemantic-grid-responsive.css">
     <!-- <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet"> -->
+    <link rel="icon" href="logo.png" type="image/png" />
     <link href="https://fonts.googleapis.com/css?family=Arvo" rel="stylesheet">
     <link href="font-awesome.css" rel="stylesheet">
     <style>
@@ -40,6 +41,9 @@
       .light {
         font-weight: 100;
       }
+      .max-width {
+        max-width: 10000px;
+      }
       body {
         min-height: 100vh;
         width: 100%;
@@ -48,6 +52,7 @@
         text-shadow: 1px 1px 1px rgba(0,0,0,0.004);
         text-rendering: optimizeLegibility !important;
         -webkit-font-smoothing: antialiased !important;
+        position: relative;
       }
       header {
         color: #FA4302;
@@ -79,7 +84,7 @@
         font-family: Milkshake, serif;
         font-size: 40px;
         line-height: 36px;
-        padding-top: 10px;
+        padding-top: 20px;
       }
       .food-thumbnail {
         position: relative;
@@ -95,6 +100,24 @@
         width: 100%;
         height: 100%;
         z-index: 0;
+      }
+      .food-thumbnail img {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+      }
+      .food-thumbnail .overlay {
+        background: url('overlay.png');
+        background-size: cover;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
       }
       #modal .food-thumbnail .photo {
         z-index: 10;
@@ -117,8 +140,14 @@
         font-weight: bold;
         top: 0px;
         left: 42px;
-        font-size: 12px;
+        font-size: 13px;
         color: white;
+
+        font-style: italic;
+      }
+      .food-thumbnail .photo .name .mom {
+        display: block;
+        font-style: normal;
       }
       .food-detail {
 
@@ -137,9 +166,14 @@
         background-color: #8E44AD;
       }*/
       .food-detail .title {
-        font-size: 14px;
+        font-size: 15px;
         line-height: 20px;
         font-weight: bold;
+      }
+      .food-detail .description {
+        color: #777;
+        font-weight: 100;
+        font-size: 14px;
       }
       .food-detail .price {
         font-size: 14px;
@@ -147,6 +181,11 @@
       }
       .food-detail .fa-heart {
         color: #FA4302;
+      }
+
+      .total-item > div {
+        padding-top: 20px;
+        
       }
       .stepon {
         background-color: #FA4302 !important;
@@ -180,6 +219,23 @@
         z-index: 100;
         padding-top: 50px;
       }
+      body.modal-open {
+        overflow: hidden;
+        position: fixed;
+      }
+      .logo-image {
+        background-image: url('logo.png');
+        opacity: 0.15;
+        bottom: -100px;
+        right: 0;
+        height: 500px;
+        width: 500px;
+        position: absolute;
+        z-index: 0;
+        display: block;
+        background-position: center;
+        background-size: cover;
+      }
       #modal .close {
         position: absolute;
         cursor: pointer;
@@ -197,6 +253,7 @@
       #modal .food-thumbnail .name {
         font-size: 16px;
         left: 46px;
+        display: block;
       }
       .fade-enter-active, .fade-leave-active {
         transition: opacity .5s
@@ -267,6 +324,9 @@
         border-radius: 2px;
         cursor: pointer;
         transition: 0.5s linear background-color;
+        margin-bottom: 100px;
+        z-index: 10;
+        position: relative;
       }
       .active {
         background: #FA812F;
@@ -286,6 +346,14 @@
         color: #555;
         width: 20px;
         text-align: center;
+        -webkit-tap-highlight-color:transparent;
+      }
+      .quantity::-moz-selection {
+        background: transparent;
+      }
+      .quantity::selection, .add-button::selection,
+      .remove-button::selection, .add-item::selection {
+        background: transparent;
       }
       .modal-btn {
         margin-top: 150px;
@@ -301,7 +369,8 @@
         color: #FA812F;
       }
       .remove-button {
-        color: #FEF3E2;
+        cursor: pointer;
+        color: #ffb28b;
       }
       .add-button:hover {
         transition: 0.5s linear all;
@@ -324,6 +393,17 @@
       .total-price {
         font-size: 24px;
       }
+      .verified {
+        color: #5EFAF7;
+      }
+      .marker {
+        color: #FAAf08;
+      }
+      .nearby {
+        color: #777;
+        font-weight: 100;
+        line-height: 30px;
+      }
     </style>
 
     <script src="https://unpkg.com/vue"></script>
@@ -331,9 +411,10 @@
 
   </head>
   <body>
+    <div class="logo-image"></div>
     <div id="container">
     <header>
-      <div class="grid-container border"></div>
+      <div class="grid-container border max-width"></div>
       <div class="grid-container">
         <div id="logo" class="grid-100">Mumshie's</div>
 
@@ -343,13 +424,9 @@
 
       <div v-if="proceed" id="modal">
         <i class="fa fa-close close" v-on:click="closePopup"></i>
-        <div v-if="review" class="grid-50 push-25 mobile-inner">
-          <div class="tray-header grid-100">Your Tray !</div>
-        </div>
 
-        <div v-if="pay" class="grid-50 push-25 mobile-inner">
-          <div class="tray-header grid-100">Payment</div>
-        </div>
+
+
         <div class="mobile-grid-50 grid-50 step-wrapper">
           <div class="step" v-bind:class="{ stepon: review }"></div>
         </div>
@@ -358,15 +435,15 @@
         </div>
         <transition name="fade">
         <div v-if="review" class="grid-50 push-25 mobile-inner">
-
+          <div class="tray-header grid-100">Your Tray !</div>
           <div class="grid-70 push-15 mobile-grid-90 mobile-push-5">
             <template v-for="item in items">
               <div v-if="item.selected" class="grid-100 tray-item">
-                <div class="mobile-grid-50">
+                <div class="grid-50 tablet-grid-50 mobile-grid-50">
                   {{item.name}}
                   <div class="modal-price">Php {{item.price}}</div>
                 </div>
-                <div class="mobile-grid-50 add-item">
+                <div class="grid-50 tablet-grid-50 mobile-grid-50 add-item">
                   <div class="fa fa-minus-circle remove-button" v-on:click="minus(item)"></div>
                   <div class="quantity">{{ item.quantity }}</div>
                   <div class="fa fa-plus-circle add-button" v-on:click="add(item)"></div>
@@ -374,11 +451,11 @@
               </div>
             </template>
             <div class="grid-100 tray-item">
-              <div class="mobile-grid-50">
+              <div class="grid-50 tablet-grid-50 mobile-grid-50">
                 Extra Rice
                 <div class="modal-price">Php 12</div>
               </div>
-              <div class="mobile-grid-50 add-item">
+              <div class="grid-50 tablet-grid-50 mobile-grid-50 add-item">
                 <div class="fa fa-minus-circle remove-button" v-on:click="removeExtraRice"></div>
                 <div class="quantity">{{ extra_rice }}</div>
                 <div class="fa fa-plus-circle add-button" v-on:click="extra_rice += 1"></div>
@@ -386,17 +463,17 @@
 
             </div>
 
-            <div class="grid-100 tray-item">
-              <div class="mobile-grid-50">
+            <div class="grid-100 tray-item total-item">
+              <div class="grid-50 tablet-grid-50 mobile-grid-50 red">
                 Total
               </div>
-              <div class="mobile-grid-50 total">
+              <div class="grid-50 tablet-grid-50 mobile-grid-50 total">
                 <div>Php {{ total }}</div>
               </div>
 
             </div>
             <div class="grid-100">
-              <div class="modal-btn mobile-grid-100 grid-100 btn active" v-on:click="showPay">Next</div>
+              <div class="modal-btn mobile-grid-100 grid-50 push-25 btn active" v-on:click="showPay">Go to Payment</div>
             </div>
           </div>
         </div>
@@ -409,12 +486,12 @@
               <div class="grid-100">
                 <h3 class="red">Total Price</h3>
                 <span class="total-price">Php {{total}}.00</span>
-
+                <br><br>
                 <h3 class="red">Delivery Adress:</h3>
-                <i class="fa fa-map-marker"></i> 1125 Robinsons Equitable Tower, Ortigas Center, Pasig City
+                <i class="fa fa-map-marker"></i> <span class="total-price">1125 Robinsons Equitable Tower, Ortigas Center, Pasig City</span>
 
                 <div class="grid-100 modal-btn" style="padding:0">
-                  <div class="mobile-grid-100 grid-100 btn active" v-on:click="checkOut">Pay</div>
+                  <div class="mobile-grid-100 grid-50 push-25 btn active" v-on:click="checkOut">Pay</div>
                 </div>
               </div>
             </div>
@@ -426,6 +503,7 @@
       <div class="grid-100 container lunch-header">
         <h2>Lunch for Tomorrow</h2>
         <i>Healthy-cooked meals crafted with love</i>
+        <div class="grid-100 nearby"><i class="fa fa-map-marker marker"></i> Menu available nearby your area</div>
       </div>
       <div class="grid-100 food-items" style="padding: 0 0">
           <template v-for="item in items">
@@ -439,13 +517,17 @@
                     </div>
                   </div>
                 </transition>
+                <div class="overlay"></div>
                 <div class="photo" v-bind:style="{ 'background-image': 'url(' + item.user_photo + ')' }">
-                  <div class="name">by Mumshie <i>{{item.mom}}</i></div>
+                  <div class="name">by Mumshie
+                    <div class="mom">{{item.mom}} <span v-if="item.verified"><i class="fa fa-check-circle verified"></i></span></div>
+                  </div>
                 </div>
                 <img :src="item.image_url">
               </div>
               <div class="food-detail food-detail-blue">
                 <div class="title">{{ item.name }}</div>
+                <div class="description"><i>{{item.description}}</i></div>
                 <div class="price">Php {{item.price}}</div>
                 <div class="rating">
                   <i class="fa fa-heart"></i>
@@ -460,7 +542,7 @@
           </template>
         </div>
 
-        <div v-if="proceed==false" v-bind:class="{ active: tray }" v-on:click="showPopup" class="grid-40 push-30 mobile-grid-100 btn">Proceed</div>
+        <div v-if="proceed==false" v-bind:class="{ active: tray }" v-on:click="showPopup" class="grid-40 push-30 mobile-grid-100 btn">View Your Tray</div>
 
       </div>
     </div>
@@ -487,7 +569,7 @@
             {
               id: 1,
               name: 'Menudo',
-              description: 'Pork, Vegetables',
+              description: 'Pork, Vegetables, and Rice',
               price: '70',
               image_url: 'menudo.jpeg',
               reviews: 88,
@@ -495,34 +577,81 @@
               mom: 'Kimberly',
               user_photo: 'https://cdn.momtricks.com/wp-content/uploads/2016/10/kimerly-ng-300x300.jpg',
               selected: false,
-              quantity: 0
+              quantity: 0,
+              verified: false
             },
             {
               id: 2,
               name: 'Kare Kare',
-              description: 'Beef, Vegetables',
+              description: 'Beef, Vegetables, and Rice',
               price: '75',
               image_url: 'karekare.jpg',
               reviews: 97,
               rating: 5,
-              mom: 'Kimberly',
-              user_photo: 'https://cdn.momtricks.com/wp-content/uploads/2016/10/kimerly-ng-300x300.jpg',
+              mom: 'Krissy',
+              user_photo: 'http://images2.preview.ph/2017/04/22/JIGSmf.jpg',
               selected: false,
-              quantity: 0
+              quantity: 0,
+              verified: true
 
             },
             {
               id: 3,
               name: 'Sinigang na Baboy',
-              description: 'Pork, Vegetables',
+              description: 'Pork, Vegetables, Soup, and Rice',
               price: '65',
               image_url: 'sinigangnababoy.jpg',
               reviews: 102,
               rating: 5,
+              mom: 'Sarah',
+              user_photo: 'https://lh5.googleusercontent.com/-86C2ljO3dFI/VPqsiLl6E8I/AAAAAAAABUs/LnIaATWkfN0/s640/blogger-image--1045734971.jpg',
+              selected: false,
+              quantity: 0,
+              verified: false
+
+            },
+            {
+              id: 4,
+              name: 'Japanese Omelette Rice',
+              description: 'Egg, Rice, Ham, and Vegetables',
+              price: '85',
+              image_url: 'omeletterice.jpg',
+              reviews: 55,
+              rating: 5,
+              mom: 'Fabio',
+              user_photo: 'https://s-media-cache-ak0.pinimg.com/originals/cc/f0/4f/ccf04f8d27a8210315e5297d2bbe1282.jpg',
+              selected: false,
+              quantity: 0,
+              verified: true
+            },
+            {
+              id: 5,
+              name: 'Tuna Kimbap',
+              description: 'Tuna, Vegetables, and Rice',
+              price: '85',
+              image_url: 'kimbap.jpg',
+              reviews: 200,
+              rating: 5,
               mom: 'Kimberly',
               user_photo: 'https://cdn.momtricks.com/wp-content/uploads/2016/10/kimerly-ng-300x300.jpg',
               selected: false,
-              quantity: 0
+              quantity: 0,
+              verified: false
+
+            },
+            {
+              id: 6,
+              name: 'Chicken Salad Sandwich',
+              description: 'Chicken, Vegetables, and Bread',
+              price: '65',
+              image_url: 'sandwich.jpeg',
+              reviews: 102,
+              rating: 5,
+              mom: 'Sarah',
+              user_photo: 'https://lh5.googleusercontent.com/-86C2ljO3dFI/VPqsiLl6E8I/AAAAAAAABUs/LnIaATWkfN0/s640/blogger-image--1045734971.jpg',
+              selected: false,
+              quantity: 0,
+              verified: false
 
             }
           ]
@@ -553,11 +682,22 @@
               this.proceed = true
               this.review = true;
               window.scrollTo(0, 0);
-            }
+
+
+            var body = document.body;
+            body.classList.add("modal-open");
+          } else {
+            var body = document.body;
+            body.classList.remove("modal-open");
+          }
 
           },
           closePopup: function (item) {
             this.proceed = false;
+            this.pay = false;
+            this.review = false;
+            var body = document.body;
+            body.classList.remove("modal-open");
           },
           showPay: function () {
             this.review = false;
