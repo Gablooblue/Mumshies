@@ -1,4 +1,4 @@
-class User < ApplicationController
+class Users < ApplicationController
     def show 
 	@user = User.find(params[:id])
 	render json: @user
