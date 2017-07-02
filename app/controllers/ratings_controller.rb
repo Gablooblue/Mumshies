@@ -1,4 +1,4 @@
-class Rating < ApplicationController
+class RatingsController < ApplicationController
     def show
 	@product = Product.find(params[:id])
 	if @product.reviews.blank?
